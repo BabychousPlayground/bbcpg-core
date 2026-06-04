@@ -1,0 +1,7 @@
+name: BabychouCore
+description: Plugin with core features of the Babychou's Playground server.
+version: 'v1.0'
+main: fr.tartur.bbcpg.core.BabychouCore
+api-version: '26.1.2'
+authors: [Tartur_]
+prefix: Babychou Core
