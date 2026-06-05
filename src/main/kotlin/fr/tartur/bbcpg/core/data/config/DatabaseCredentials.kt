@@ -1,6 +1,7 @@
 package fr.tartur.bbcpg.core.data.config
 
 import de.exlll.configlib.Comment
+import de.exlll.configlib.Configuration
 
 enum class DatabaseType {
     SQLITE {
@@ -13,6 +14,7 @@ enum class DatabaseType {
     abstract infix fun uri(host: String): String
 }
 
+@Configuration
 data class DatabaseCredentials(
     @Comment("Valid values: 'mysql' (chosen by default), 'sqlite'")
     var type: DatabaseType = DatabaseType.MYSQL,
