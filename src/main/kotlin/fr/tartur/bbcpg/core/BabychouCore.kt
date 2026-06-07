@@ -1,50 +1,29 @@
 package fr.tartur.bbcpg.core
 
-import de.exlll.configlib.YamlConfigurations
-import fr.tartur.bbcpg.core.data.DataSource
+import fr.tartur.bbcpg.core.data.UserManager
+import fr.tartur.bbcpg.core.data.UserSource
+import fr.tartur.bbcpg.core.data.config.ConfigurationManager
 import fr.tartur.bbcpg.core.data.config.DatabaseCredentials
-import fr.tartur.bbcpg.core.data.config.DatabaseType
 import fr.tartur.bbcpg.core.events.PlayerStreamEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.nio.file.Paths
-import kotlin.io.path.exists
 
 class BabychouCore : JavaPlugin() {
-    private var data: DataSource? = null
+    private var source: UserSource? = null
 
     override fun onEnable() {
-        loadConfigurations()
+        val configurations = ConfigurationManager(mapOf(
+            Paths.get("plugins", name, "database", "credentials.yml") to DatabaseCredentials
+        ))
+        source = UserSource(checkNotNull(configurations.get<DatabaseCredentials>()))
+        val users = UserManager(checkNotNull(source))
 
-        server.pluginManager.registerEvents(PlayerStreamEvent(), this)
+        server.pluginManager.registerEvents(PlayerStreamEvent(users), this)
         logger.info("Bienvenue sur Babychou's Playground ! Amusez-vous bien !")
     }
 
     override fun onDisable() {
+        source?.close()
         logger.info("À bientôt sur Babychou's Playground !")
-    }
-
-    private fun loadConfigurations() {
-        val playersPath = Paths.get("plugins", name, "database", "credentials.yml")
-        val credentials = if (playersPath.exists()) {
-            YamlConfigurations.load(
-                playersPath,
-                DatabaseCredentials::class.java
-            )
-        } else {
-            val credentials = DatabaseCredentials(
-                DatabaseType.SQLITE,
-                "babychous.db",
-                "",
-                ""
-            )
-            YamlConfigurations.save(
-                playersPath,
-                DatabaseCredentials::class.java,
-                credentials
-            )
-            credentials
-        }
-
-        data = DataSource(credentials)
     }
 }
