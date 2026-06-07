@@ -2,6 +2,7 @@ package fr.tartur.bbcpg.core.data.config
 
 import de.exlll.configlib.Comment
 import de.exlll.configlib.Configuration
+import java.nio.file.Paths
 
 enum class DatabaseType {
     SQLITE {
@@ -21,4 +22,21 @@ data class DatabaseCredentials(
     var host: String = "localhost",
     var user: String = "root",
     var password: String = "",
-) {}
+    @Comment("SQL initialization script file path")
+    var init: String = ""
+) : Configurable {
+    companion object : ConfigurationProvider<DatabaseCredentials> {
+        override val clazz: Class<DatabaseCredentials> = DatabaseCredentials::class.java
+
+        override fun default(): DatabaseCredentials {
+            val path = Paths.get("plugins", "BabychouCore", "database")
+            return DatabaseCredentials(
+                DatabaseType.SQLITE,
+                path.resolve("babychous.db").toString(),
+                "",
+                "",
+                path.resolve("init.sql").toString()
+            )
+        }
+    }
+}
