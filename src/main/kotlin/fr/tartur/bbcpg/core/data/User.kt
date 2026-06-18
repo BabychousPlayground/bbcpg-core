@@ -1,6 +1,6 @@
 package fr.tartur.bbcpg.core.data
 
-import fr.tartur.bbcpg.core.util.display.Message.message
+import fr.tartur.bbcpg.core.util.display.message
 import org.bukkit.entity.Player
 import java.util.UUID
 

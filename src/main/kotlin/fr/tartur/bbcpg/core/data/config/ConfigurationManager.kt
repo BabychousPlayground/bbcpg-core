@@ -1,5 +1,7 @@
 package fr.tartur.bbcpg.core.data.config
 
+import de.exlll.configlib.NameFormatters
+import de.exlll.configlib.YamlConfigurationProperties
 import de.exlll.configlib.YamlConfigurations
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -8,18 +10,22 @@ sealed interface Configurable
 
 sealed interface ConfigurationProvider<T : Configurable> {
     val clazz: Class<T>
-    fun default(): T
+    fun default(): T = clazz.getDeclaredConstructor().newInstance()
 }
 
 class ConfigurationManager(configurations: Map<Path, ConfigurationProvider<out Configurable>>) {
     val configurations: List<Configurable> = configurations.map { (path, configuration) ->
         loadOrCreate(path, configuration) }
+    private val properties = YamlConfigurationProperties.newBuilder()
+        .setNameFormatter(NameFormatters.LOWER_UNDERSCORE)
+        .build()
 
-    fun <T : Configurable> loadOrCreate(path: Path, provider: ConfigurationProvider<T>): T =
+    private fun <T : Configurable> loadOrCreate(path: Path, provider: ConfigurationProvider<T>): T =
         if (path.exists()) {
             YamlConfigurations.load(
                 path,
-                provider.clazz
+                provider.clazz,
+                properties
             )
         } else {
             val default = provider.default()
@@ -27,7 +33,8 @@ class ConfigurationManager(configurations: Map<Path, ConfigurationProvider<out C
             YamlConfigurations.save(
                 path,
                 provider.clazz,
-                default
+                default,
+                properties
             )
 
             default
