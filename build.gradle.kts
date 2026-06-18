@@ -1,3 +1,5 @@
+import java.nio.file.Paths
+
 plugins {
     kotlin("jvm") version "2.3.21"
     java
@@ -30,4 +32,33 @@ kotlin {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.register<Delete>("deleteOldJar") {
+    val shadowJar = tasks.shadowJar.get()
+    val serverArchive = Paths.get(properties["minecraft.server"].toString())
+        .resolve("plugins", shadowJar.archiveFileName.get())
+    delete(serverArchive)
+}
+
+tasks.register<Copy>("copyNewJar") {
+    val shadowJar = tasks.shadowJar.get()
+    val serverArchive = Paths.get(properties["minecraft.server"].toString())
+        .resolve("plugins", shadowJar.archiveFileName.get())
+    copy {
+        from(shadowJar.archiveFile.get().asFile.toPath().toString())
+        into(serverArchive)
+    }
+}
+
+tasks.register<Exec>("runServer") {
+    dependsOn("shadowJar", "deleteOldJar", "copyNewJar")
+
+    val server = properties["minecraft.server"].toString()
+    val serverStartScript = properties["minecraft.start"].toString()
+
+    workingDir(server)
+    executable(serverStartScript)
+
+    println("Set working dir '${workingDir.toPath()}' with executable '$executable'")
 }
