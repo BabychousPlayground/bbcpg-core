@@ -1,22 +1,26 @@
 package fr.tartur.bbcpg.core.events
 
-import fr.tartur.bbcpg.core.data.User
 import fr.tartur.bbcpg.core.data.UserManager
-import fr.tartur.bbcpg.core.util.display.Message.message
-import net.kyori.adventure.text.Component
+import fr.tartur.bbcpg.core.util.display.MENU_SELECTOR
+import fr.tartur.bbcpg.core.util.display.joinMessage
+import fr.tartur.bbcpg.core.util.display.quitMessage
+import fr.tartur.bbcpg.core.util.display.setItem
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.Sound
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import net.kyori.adventure.text.Component.text as text
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 
 class PlayerStreamEvent(private val players: UserManager) : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
-        val user = players.connect(event.player)
+        val player = event.player
+        val user = players.connect(player)
+
         val players = Bukkit.getOnlinePlayers()
 
         if (user.new) {
@@ -25,6 +29,13 @@ class PlayerStreamEvent(private val players: UserManager) : Listener {
 
         event.joinMessage(joinMessage(user))
         players.forEach { it.playSound(it, Sound.BLOCK_NOTE_BLOCK_PLING, 3f, 1f) }
+
+        player.gameMode = GameMode.ADVENTURE
+        player.healthScale = 2.0
+        player.heal(2.0)
+        player.foodLevel = 20
+        player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, -1, 1))
+        setItem(player, MENU_SELECTOR, 4)
     }
 
     @EventHandler
@@ -33,17 +44,4 @@ class PlayerStreamEvent(private val players: UserManager) : Listener {
         event.quitMessage(quitMessage(event.player))
         Bukkit.getOnlinePlayers().forEach { it.playSound(it, Sound.ENTITY_ITEM_PICKUP, 3f, 1f) }
     }
-
-    fun joinMessage(user: User): Component = text {
-        if (user.new) {
-            it.append(message("<rainbow>Bienvenue à <white><bold>${user.spigot.name}</bold></white> parmi " +
-                    "nous !</rainbow>\n"))
-        }
-
-        it.append(message("<gray>[<green>+</green>]</gray> <yellow>${user.spigot.name}</yellow>"))
-    }
-
-    fun quitMessage(player: Player): Component = message(
-        "<gray>[<red>-</red>]</gray> <yellow>${player.name}</yellow>"
-    )
 }
